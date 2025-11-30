@@ -61,16 +61,18 @@ The model was trained using the following hyperparameters (as defined in `config
 ## Project Findings & Analysis
 
 ### Simulation Results
-The following video demonstrates the policy's performance in the simulation environment.
+The following video demonstrates the policy's performance in the simulation environment
 
-<video src="sim_result.mp4" width="640" height="480" controls></video>
+https://github.com/user-attachments/assets/ec1d9885-0d81-46a1-a29d-c0ef0e782fff
 
-[Watch Simulation Result](sim_result.mp4)
+
 
 ### Prediction Analysis
 We compared the model's predicted trajectory against the expert demonstration on an unseen test episode.
 
-![Prediction Analysis](prediction_analysis.png)
+<img width="1500" height="500" alt="prediction_analysis" src="https://github.com/user-attachments/assets/cb3f9c67-689f-4736-b537-5d6efd226594" />
+
+
 
 **Interpretation**:
 The plot above visualizes the joint positions (Base, Shoulder, Elbow) over time:
