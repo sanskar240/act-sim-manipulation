@@ -16,52 +16,46 @@ class ACTPolicy(nn.Module):
         self.kl_weight = args_override['kl_weight']
         print(f'KL Weight {self.kl_weight}')
         
-        # --- ADAPTER FIX START ---
-        # Detect what the library actually built vs what our data is
+        # --- ADAPTER INFO ---
         self.model_action_dim = self.model.encoder_action_proj.in_features
-        self.model_state_dim = self.model.encoder_joint_proj.in_features
         self.data_action_dim = args_override['action_dim']
-        
-        print(f"\n--- DIMENSION CHECK ---")
-        print(f"Data provides: {self.data_action_dim} inputs")
-        print(f"Model expects: {self.model_action_dim} inputs")
-        if self.model_action_dim != self.data_action_dim:
-            print(f"⚠️ MISMATCH DETECTED: Activating auto-padding adapter.")
-        else:
-            print(f"✅ Dimensions match.")
-        print(f"-----------------------\n")
-        # --- ADAPTER FIX END ---
+        # --------------------
 
     def __call__(self, qpos, image, actions=None, is_pad=None):
         env_state = None
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
-        image = normalize(image)
         
-        # --- AUTO-PADDING INPUTS ---
-        # If model wants 5 but we have 4, pad with zeros
-        if qpos.shape[-1] < self.model_state_dim:
-            diff = self.model_state_dim - qpos.shape[-1]
-            qpos = F.pad(qpos, (0, diff)) # Pad last dimension
+        # 1. Normalize (Works best on 4D tensors)
+        # If input is (B, C, H, W), this works perfectly.
+        image = normalize(image)
+
+        # 2. Fix Image Dimensions for Model (B, C, H, W) -> (B, Num_Cam, C, H, W)
+        # The model requires a "Camera" dimension, even if we only have 1 camera.
+        if image.ndim == 4:
+            image = image.unsqueeze(1)
+        
+        # 3. Auto-Padding for Joint Dimensions (4 -> 5 if needed)
+        model_state_dim = self.model.encoder_joint_proj.in_features
+        if qpos.shape[-1] < model_state_dim:
+            diff = model_state_dim - qpos.shape[-1]
+            qpos = F.pad(qpos, (0, diff))
             
         if actions is not None and actions.shape[-1] < self.model_action_dim:
             diff = self.model_action_dim - actions.shape[-1]
             actions = F.pad(actions, (0, diff))
-        # ---------------------------
 
+        # 4. Forward Pass
         if actions is not None: # training time
             actions = actions[:, :self.model.num_queries]
             is_pad = is_pad[:, :self.model.num_queries]
 
             a_hat, is_pad_hat, (mu, logvar) = self.model(qpos, image, env_state, actions, is_pad)
             
-            # --- AUTO-SLICING OUTPUT ---
-            # Model outputs 5, we only want to compare the first 4 (the real ones)
+            # Slice output back to data dimension
             if a_hat.shape[-1] > self.data_action_dim:
                 a_hat = a_hat[..., :self.data_action_dim]
-                # We also need to slice the 'actions' back to 4 for the loss function
                 actions = actions[..., :self.data_action_dim]
-            # ---------------------------
 
             total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
             loss_dict = dict()
@@ -74,10 +68,9 @@ class ACTPolicy(nn.Module):
         else: # inference time
             a_hat, _, (_, _) = self.model(qpos, image, env_state) # no action, sample from prior
             
-            # --- AUTO-SLICING OUTPUT (INFERENCE) ---
+            # Slice output back to data dimension
             if a_hat.shape[-1] > self.data_action_dim:
                 a_hat = a_hat[..., :self.data_action_dim]
-            # ---------------------------------------
             
             return a_hat
 

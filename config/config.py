@@ -64,6 +64,6 @@ TRAIN_CONFIG = {
     'num_epochs': 2000,
     'batch_size_val': 4,
     'batch_size_train': 4,
-    'eval_ckpt_name': 'policy_last.ckpt',
+    'eval_ckpt_name': 'policy_epoch_120_seed_42.ckpt',
     'checkpoint_dir': CHECKPOINT_DIR
 }

@@ -1,14 +1,17 @@
 # FILE: visualize_sim.py
-import torch
-import cv2
 import os
+import cv2
+import torch
 import pickle
 import numpy as np
-import argparse
 import matplotlib.pyplot as plt
+
+# --- CRITICAL FIX: Import Config FIRST to set up 'DEVICE' environment variable ---
+from config.config import POLICY_CONFIG, TASK_CONFIG, TRAIN_CONFIG
+# ---------------------------------------------------------------------------------
+
 from sim_env import SimEnv
 from training.utils import make_policy
-from config.config import POLICY_CONFIG, TASK_CONFIG, TRAIN_CONFIG
 
 # Configuration
 cfg = TASK_CONFIG
@@ -22,10 +25,12 @@ def load_model():
     policy_config['state_dim'] = 4
     policy_config['action_dim'] = 4
     
-    ckpt_path = os.path.join(train_cfg['checkpoint_dir'], 'sim_cube_sort', 'policy_last.ckpt')
+    # Point to the file you actually have (checkpoints/sim_cube_sort/policy_last.ckpt)
+    ckpt_path = os.path.join(train_cfg['checkpoint_dir'], 'sim_cube_sort', train_cfg['eval_ckpt_name'])
+    
     if not os.path.exists(ckpt_path):
         print(f"❌ Error: Checkpoint not found at {ckpt_path}")
-        print("Did you finish training?")
+        print("Did you finish training? Check config.py eval_ckpt_name")
         exit()
 
     print(f"Loading model from: {ckpt_path}")
@@ -52,13 +57,12 @@ def main():
     post_process = lambda a: a * stats['action_std'] + stats['action_mean']
 
     print("Starting Inference Simulation...")
-    env.reset()
+    # This puts the cube in a random spot (Unseen Data)
+    env.reset() 
     
     # Lists to store video frames and data
     video_frames = []
-    qpos_history = []
-    target_history = []
-
+    
     # Get initial observation
     obs = env.get_obs()
     
@@ -82,7 +86,6 @@ def main():
         # B. Ask AI for Action
         with torch.inference_mode():
             # The model returns a chunk of actions (e.g., 100 steps)
-            # We just take the first one for this simple test (No Temporal Aggregation for simplicity)
             action_chunk = policy(qpos, curr_image) 
             next_action_raw = action_chunk[:, 0, :] # Take step 0
             
@@ -92,10 +95,6 @@ def main():
         # D. Move Robot
         env.step(next_action)
         obs = env.get_obs()
-        
-        # Log data
-        qpos_history.append(qpos_numpy)
-        target_history.append(next_action)
         
         if t % 50 == 0:
             print(f"Step {t}/{max_steps}")
@@ -112,17 +111,6 @@ def main():
     cv2.destroyAllWindows()
     video.release()
     print(f"\n✅ Video saved to: {os.path.abspath(output_video)}")
-    
-    # 4. Plot Joints (Optional)
-    qpos_history = np.array(qpos_history)
-    target_history = np.array(target_history)
-    plt.figure(figsize=(10, 5))
-    plt.plot(qpos_history[:, 0], label='Joint 0 Actual')
-    plt.plot(target_history[:, 0], label='Joint 0 Target', linestyle='--')
-    plt.legend()
-    plt.title("Robot Movement: Actual vs AI Target")
-    plt.savefig('joint_plot.png')
-    print("✅ Plot saved to: joint_plot.png")
 
 if __name__ == "__main__":
     main()
