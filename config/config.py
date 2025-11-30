@@ -12,7 +12,7 @@ CHECKPOINT_DIR = 'checkpoints/'
 # device
 device = 'cpu'
 if torch.cuda.is_available(): device = 'cuda'
-#if torch.backends.mps.is_available(): device = 'mps'
+if torch.backends.mps.is_available(): device = 'mps'  # <-- UNCOMMENT THIS LINE!
 os.environ['DEVICE'] = device
 
 # robot port names
@@ -57,8 +57,8 @@ POLICY_CONFIG = {
 TRAIN_CONFIG = {
     'seed': 42,
     'num_epochs': 2000,
-    'batch_size_val': 8,
-    'batch_size_train': 8,
+    'batch_size_val': 4,
+    'batch_size_train': 4,
     'eval_ckpt_name': 'policy_last.ckpt',
     'checkpoint_dir': CHECKPOINT_DIR
 }
