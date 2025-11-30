@@ -311,3 +311,4 @@ if __name__ == "__main__":
         delta = time.monotonic() - s
         print(f'read position took {delta}')
         print(f'position {pos}')
+
