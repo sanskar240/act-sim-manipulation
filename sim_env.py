@@ -1,9 +1,8 @@
-# FILE: sim_env.py
 import numpy as np
 import mujoco
 import mediapy as media
 
-# A simple MuJoCo XML definition for a 4-DOF arm and a generic object (cube)
+# Updated XML with a 'site' at the gripper for tracking
 XML_SCENE = """
 <mujoco>
   <option timestep="0.002"/>
@@ -13,7 +12,7 @@ XML_SCENE = """
         <geom type="plane" size="2 2 0.1" rgba=".9 .9 .9 1"/>
     </body>
 
-    <!-- The Robot Arm (Simplified 4-joint arm + gripper) -->
+    <!-- The Robot Arm -->
     <body name="base" pos="0 0 0">
         <geom type="cylinder" size="0.1 0.1" rgba=".5 .5 .5 1"/>
         <body name="link1" pos="0 0 0.1">
@@ -29,6 +28,8 @@ XML_SCENE = """
                         <joint name="joint4" axis="0 1 0" range="-3 3" damping="1.0"/>
                         <geom type="box" size="0.05 0.05 0.05" rgba="0.8 0.2 0.2 1"/>
                         <camera name="wrist_cam" pos="0.1 0 0" fovy="60"/>
+                        <!-- IMPORTANT: This site allows us to teleport the cube to the hand -->
+                        <site name="end_effector" pos="0.05 0 0" size="0.01"/>
                     </body>
                 </body>
             </body>
@@ -56,55 +57,43 @@ XML_SCENE = """
 
 class SimEnv:
     def __init__(self):
-        # Load the model from the XML string
         self.model = mujoco.MjModel.from_xml_string(XML_SCENE)
         self.data = mujoco.MjData(self.model)
-        
-        # Dimensions for images (matches your config.py)
         self.width = 640
         self.height = 480
-        
-        # Renderer
         self.renderer = mujoco.Renderer(self.model, height=self.height, width=self.width)
-        
-        # Internal state
-        self.actuator_ids = [0, 1, 2, 3] # Indices of joints
-        self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4']
+        self.actuator_ids = [0, 1, 2, 3] 
 
     def reset(self):
         mujoco.mj_resetData(self.model, self.data)
-        # Randomize cube position slightly
-        cube_joint_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "cube")
-        # Set cube position (x, y, z)
-        self.data.qpos[-7:-4] = [0.3 + np.random.uniform(-0.05, 0.05), 
-                                 0.1 + np.random.uniform(-0.05, 0.05), 
-                                 0.05]
         mujoco.mj_forward(self.model, self.data)
+
+    def set_cube_pos(self, pos):
+        """
+        Teleports the cube to a specific XYZ location.
+        pos: [x, y, z]
+        """
+        # Find the cube joint address in qpos
+        # Free joints have 7 values (3 pos + 4 quat)
+        start_idx = self.model.jnt_qposadr[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "cube_joint")]
+        self.data.qpos[start_idx:start_idx+3] = pos
+        mujoco.mj_forward(self.model, self.data)
+
+    def get_ee_pos(self):
+        """ Returns the 3D location of the gripper """
+        site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "end_effector")
+        return self.data.site_xpos[site_id]
         
     def step(self, action):
-        """
-        Mimics the hardware set_goal_pos logic.
-        Action: numpy array of target joint positions (radians).
-        """
         self.data.ctrl[self.actuator_ids] = action
-        # Step physics multiple times to stabilize
         for _ in range(50): 
             mujoco.mj_step(self.model, self.data)
 
     def get_obs(self):
-        """
-        Returns observation dict matching robot.py/record_episodes.py structure
-        """
-        # Get Joint Positions (qpos)
         qpos = np.array([self.data.qpos[i] for i in range(len(self.actuator_ids))])
-        
-        # Get Joint Velocities (qvel)
         qvel = np.array([self.data.qvel[i] for i in range(len(self.actuator_ids))])
-        
-        # Render Camera
         self.renderer.update_scene(self.data, camera="front")
         img_front = self.renderer.render()
-        
         return {
             'qpos': qpos,
             'qvel': qvel,
