@@ -129,7 +129,8 @@ env/
 venv/
 ENV/
 env.bak/
-venv.bak/
+
+episodes-v2.zip
 
 # Spyder project settings
 .spyderproject

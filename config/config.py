@@ -61,9 +61,9 @@ POLICY_CONFIG = {
 # training config
 TRAIN_CONFIG = {
     'seed': 42,
-    'num_epochs': 2000,
-    'batch_size_val': 4,
-    'batch_size_train': 4,
-    'eval_ckpt_name': 'policy_epoch_120_seed_42.ckpt',
+    'num_epochs': 200,      # INCREASED: Give it time to learn amplitude
+    'batch_size_val': 4,    # Keep small for RAM
+    'batch_size_train': 4,  # Keep small for RAM
+    'eval_ckpt_name': 'policy_best.ckpt', # We will save the best model now
     'checkpoint_dir': CHECKPOINT_DIR
 }
