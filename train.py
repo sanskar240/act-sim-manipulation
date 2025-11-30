@@ -18,6 +18,11 @@ task = args.task
 task_cfg = TASK_CONFIG
 train_cfg = TRAIN_CONFIG
 policy_config = POLICY_CONFIG
+
+policy_config['state_dim'] = task_cfg['state_dim']
+policy_config['action_dim'] = task_cfg['action_dim']
+# -----------------------
+
 checkpoint_dir = os.path.join(train_cfg['checkpoint_dir'], task)
 
 # device
