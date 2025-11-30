@@ -36,22 +36,31 @@ TASK_CONFIG = {
 
 
 # policy config
+# config/config.py
+
+# ... existing code ...
+
+# policy config
 POLICY_CONFIG = {
     'lr': 1e-5,
     'device': device,
-    'num_queries': 100,           # The "Chunk" size (predicts 100 steps ahead)
+    'num_queries': 100,
     'kl_weight': 10,
     'hidden_dim': 512,
     'dim_feedforward': 3200,
     'lr_backbone': 1e-5,
-    'backbone': 'resnet18',       # ResNet18 fits easily on your T4
+    'backbone': 'resnet18',
     'enc_layers': 4,
     'dec_layers': 7,
     'nheads': 8,
-    'camera_names': ['front'],    # <--- CRITICAL: Must match your dataset
+    'camera_names': ['front'],
     'policy_class': 'ACT',
-    'temporal_agg': False
+    'temporal_agg': False,
+    'state_dim': 4,   # <--- ADD THIS (Must match your data)
+    'action_dim': 4   # <--- ADD THIS (Must match your data)
 }
+
+# ... existing code ...
 
 # training config
 TRAIN_CONFIG = {
