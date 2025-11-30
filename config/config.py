@@ -22,15 +22,15 @@ ROBOT_PORTS = {
 }
 
 
-# task config (you can add new tasks)
+
 TASK_CONFIG = {
     'dataset_dir': DATA_DIR,
     'episode_len': 300,
-    'state_dim': 5,
-    'action_dim': 5,
+    'state_dim': 4,       # CHANGED: Was 5, now 4 (matches SimEnv)
+    'action_dim': 4,      # CHANGED: Was 5, now 4 (matches SimEnv)
     'cam_width': 640,
     'cam_height': 480,
-    'camera_names': ['front'],
+    'camera_names': ['front'], # CHANGED: Ensure this matches SimEnv camera name
     'camera_port': 0
 }
 
@@ -39,16 +39,16 @@ TASK_CONFIG = {
 POLICY_CONFIG = {
     'lr': 1e-5,
     'device': device,
-    'num_queries': 100,
+    'num_queries': 100,           # The "Chunk" size (predicts 100 steps ahead)
     'kl_weight': 10,
     'hidden_dim': 512,
     'dim_feedforward': 3200,
     'lr_backbone': 1e-5,
-    'backbone': 'resnet18',
+    'backbone': 'resnet18',       # ResNet18 fits easily on your T4
     'enc_layers': 4,
     'dec_layers': 7,
     'nheads': 8,
-    'camera_names': ['front'],
+    'camera_names': ['front'],    # <--- CRITICAL: Must match your dataset
     'policy_class': 'ACT',
     'temporal_agg': False
 }
