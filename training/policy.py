@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torch.nn import functional as F
 import torchvision.transforms as transforms
+import argparse # <--- NEW IMPORT
 
 from detr.main import build_ACT_model_and_optimizer, build_CNNMLP_model_and_optimizer
 import IPython
@@ -9,11 +10,16 @@ e = IPython.embed
 class ACTPolicy(nn.Module):
     def __init__(self, args_override):
         super().__init__()
-        model, optimizer = build_ACT_model_and_optimizer(args_override)
+        # FIX: Convert the config dictionary to a Namespace object
+        # The detr library expects 'args.action_dim', not 'args["action_dim"]'
+        args_namespace = argparse.Namespace(**args_override)
+        
+        model, optimizer = build_ACT_model_and_optimizer(args_namespace)
         self.model = model # CVAE decoder
         self.optimizer = optimizer
         self.kl_weight = args_override['kl_weight']
         print(f'KL Weight {self.kl_weight}')
+        print(f'Model built with state_dim={args_namespace.state_dim}, action_dim={args_namespace.action_dim}')
 
     def __call__(self, qpos, image, actions=None, is_pad=None):
         env_state = None
@@ -44,7 +50,9 @@ class ACTPolicy(nn.Module):
 class CNNMLPPolicy(nn.Module):
     def __init__(self, args_override):
         super().__init__()
-        model, optimizer = build_CNNMLP_model_and_optimizer(args_override)
+        # Same fix for CNNMLP just in case
+        args_namespace = argparse.Namespace(**args_override)
+        model, optimizer = build_CNNMLP_model_and_optimizer(args_namespace)
         self.model = model # decoder
         self.optimizer = optimizer
 
