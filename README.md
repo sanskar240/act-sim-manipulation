@@ -1,11 +1,4 @@
-# Imitation Learning for 250$ robot arm
-This repository contains a re-adapatation of [Action Chunking Transformer](https://github.com/tonyzhaozh/act/tree/main) that works for this [low-cost robot](https://github.com/AlexanderKoch-Koch/low_cost_robot) design (250$). 
-
-We are sharing the repo so anyone (non-experts included) can train a robot policy after a few teleoperated demonstraions.
-
-The sorting task in the video was trained with less than 30 demonstrations on an RTX 3080 and took less than 30min.
-
-https://github.com/Shaka-Labs/ACT/assets/45405956/83c05915-7442-49a4-905a-273fe35e84ee
+# Factory ACT
 
 
 ## AI training
@@ -51,3 +44,44 @@ Make sure to keep the same setup while you were collecting the data. To evaluate
 ~~~
 python evaluate.py --task sort
 ~~~
+
+## Training Configuration
+The model was trained using the following hyperparameters (as defined in `config/config.py`):
+- **Epochs**: 2000
+- **Batch Size**: 4
+- **Learning Rate**: 1e-5
+- **Backbone**: ResNet18
+- **Transformer Architecture**: 
+    - Encoder Layers: 4
+    - Decoder Layers: 7
+    - Attention Heads: 8
+    - Hidden Dimension: 512
+    - Feedforward Dimension: 3200
+
+## Project Findings & Analysis
+
+### Simulation Results
+The following video demonstrates the policy's performance in the simulation environment. The agent successfully learned to sort the object, showing smooth and temporally consistent motion.
+
+<video src="sim_result.mp4" width="640" height="480" controls></video>
+
+[Watch Simulation Result](sim_result.mp4)
+
+### Prediction Analysis
+We compared the model's predicted trajectory against the expert demonstration on an unseen test episode.
+
+![Prediction Analysis](prediction_analysis.png)
+
+**Interpretation**:
+The plot above visualizes the joint positions (Base, Shoulder, Elbow) over time:
+- **Black Dashed Line**: Ground truth (Expert trajectory).
+- **Colored Lines**: ACT Model prediction.
+
+
+## Future Work (v2)
+We are currently working on **v2** of this project. While the current results are hacky, we are actively exploring several improvement strategies:
+- **Data Augmentation**: Implementing more aggressive augmentation to handle lighting and pose variations.
+- **Model Scaling**: Testing larger transformer backbones to capture finer motor skills.
+- **Sim-to-Real**: Focusing on domain randomization to facilitate smoother deployment to the physical robot.
+
+Stay tuned for updates!
