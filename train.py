@@ -8,9 +8,9 @@ import torch
 import numpy as np
 from training.utils import make_policy, make_optimizer, load_data, compute_dict_mean, detach_dict, set_seed
 
-
-ACCUMULATION_STEPS = 8  
-
+# --- HYPERPARAMETERS FOR M2 AIR ---
+ACCUMULATION_STEPS = 8  # Virtual Batch Size = 4 * 8 = 32
+# ----------------------------------
 
 # parse the task name via command line
 parser = argparse.ArgumentParser()
