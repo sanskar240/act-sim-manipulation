@@ -102,6 +102,24 @@ def train_bc(train_dataloader, val_dataloader, policy_config):
         epoch_summary = compute_dict_mean(train_history[(batch_idx+1)*epoch:(batch_idx+1)*(epoch+1)])
         epoch_train_loss = epoch_summary['loss']
         print(f'Train loss: {epoch_train_loss:.5f}')
+
+        # --- EARLY STOPPING CODE ---
+        if epoch_train_loss < 0.1: # Threshold: 0.1 is usually good enough for simple tasks
+            print(f"\n🚀 SUCCESS: Train loss is {epoch_train_loss:.5f} (below 0.1). Stopping early!")
+            ckpt_path = os.path.join(checkpoint_dir, f'policy_last.ckpt')
+            torch.save(policy.state_dict(), ckpt_path)
+            # Also save a backup with the epoch number just in case
+            backup_path = os.path.join(checkpoint_dir, f'policy_epoch_{epoch}_earlystop.ckpt')
+            torch.save(policy.state_dict(), backup_path)
+            print(f"Saved checkpoint to {ckpt_path}")
+            
+            # Save the stats so we can un-normalize during inference
+            stats_path = os.path.join(checkpoint_dir, f'dataset_stats.pkl')
+            with open(stats_path, 'wb') as f:
+                pickle.dump(stats, f)
+            print("Saved dataset stats.")
+            break 
+        # ---------------------------
         summary_string = ''
         for k, v in epoch_summary.items():
             summary_string += f'{k}: {v.item():.3f} '
