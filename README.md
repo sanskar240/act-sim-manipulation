@@ -61,7 +61,7 @@ The model was trained using the following hyperparameters (as defined in `config
 ## Project Findings & Analysis
 
 ### Simulation Results
-The following video demonstrates the policy's performance in the simulation environment. The agent successfully learned to sort the object, showing smooth and temporally consistent motion.
+The following video demonstrates the policy's performance in the simulation environment.
 
 <video src="sim_result.mp4" width="640" height="480" controls></video>
 
