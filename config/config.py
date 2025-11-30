@@ -12,7 +12,7 @@ CHECKPOINT_DIR = 'checkpoints/'
 # device
 device = 'cpu'
 if torch.cuda.is_available(): device = 'cuda'
-if torch.backends.mps.is_available(): device = 'mps'  # <-- UNCOMMENT THIS LINE!
+if torch.backends.mps.is_available(): device = 'mps' 
 os.environ['DEVICE'] = device
 
 # robot port names
@@ -35,10 +35,6 @@ TASK_CONFIG = {
 }
 
 
-# policy config
-# config/config.py
-
-# ... existing code ...
 
 # policy config
 POLICY_CONFIG = {
@@ -56,8 +52,8 @@ POLICY_CONFIG = {
     'camera_names': ['front'],
     'policy_class': 'ACT',
     'temporal_agg': False,
-    'state_dim': 4,   # <--- ADD THIS (Must match your data)
-    'action_dim': 4   # <--- ADD THIS (Must match your data)
+    'state_dim': 4,  
+    'action_dim': 4   
 }
 
 # ... existing code ...
